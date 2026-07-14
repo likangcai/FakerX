@@ -17,6 +17,7 @@ import pickle
 import hashlib
 from typing import Dict, List, Optional, Generator, Callable, Any
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
+from concurrent.futures.process import BrokenProcessPool
 from functools import partial
 
 
@@ -186,10 +187,23 @@ class BatchGenerator:
                 tasks.append((schema, count, i, seed, unique_fields))
 
         results: List[Dict] = []
-        with ProcessPoolExecutor(max_workers=workers) as executor:
-            futures = [executor.submit(_worker_generate, task) for task in tasks]
-            for future in as_completed(futures):
-                results.extend(future.result())
+        try:
+            with ProcessPoolExecutor(max_workers=workers) as executor:
+                futures = [executor.submit(_worker_generate, task) for task in tasks]
+                for future in as_completed(futures):
+                    results.extend(future.result())
+        except (BrokenProcessPool, RuntimeError, OSError):
+            # Windows spawn 模式下回退到单进程
+            from faker import Faker
+            fake = Faker()
+            if base_seed is not None:
+                Faker.seed(base_seed)
+            seen = {f: set() for f in (unique_fields or [])}
+            for _ in range(total_count):
+                record = {}
+                for key, field_def in schema.items():
+                    record[key] = _generate_field(fake, key, field_def, record, seen)
+                results.append(record)
 
         return results
 
@@ -228,11 +242,24 @@ class BatchGenerator:
             if count > 0:
                 tasks.append((schema, count, i, seed, unique_fields))
 
-        with ProcessPoolExecutor(max_workers=workers) as executor:
-            futures = [executor.submit(_worker_generate, task) for task in tasks]
-            for future in as_completed(futures):
-                for record in future.result():
-                    yield record
+        try:
+            with ProcessPoolExecutor(max_workers=workers) as executor:
+                futures = [executor.submit(_worker_generate, task) for task in tasks]
+                for future in as_completed(futures):
+                    for record in future.result():
+                        yield record
+        except (BrokenProcessPool, RuntimeError, OSError):
+            # Windows spawn 模式下回退到单进程流式
+            from faker import Faker
+            fake = Faker()
+            if base_seed is not None:
+                Faker.seed(base_seed)
+            seen = {f: set() for f in (unique_fields or [])}
+            for _ in range(total_count):
+                record = {}
+                for key, field_def in schema.items():
+                    record[key] = _generate_field(fake, key, field_def, record, seen)
+                yield record
 
     @staticmethod
     async def generate_async(

@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 [project]
 # 基础元数据
 name = "fakerx"
-version = "2.0.0"
+version = "2.0.1"
 authors = [
     { name = "YingZi", email = "yingzilkq@163.com" }
 ]

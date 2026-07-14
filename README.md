@@ -401,7 +401,7 @@ async def main():
         {'id': '{pyint}', 'name': '{name}'},
         total_count=1000,
     ):
-        process(record)
+        print(record)  # 逐条处理数据（如写入数据库、导出等）
 
 asyncio.run(main())
 ```

@@ -30,7 +30,8 @@ from .exceptions import FakerXError, SchemaError
 # ----------------------------------------------------------------
 _FAKERX_OWN_METHODS = frozenset({
     'schema', 'schema_stream', 'schema_chunks', 'schema_parallel',
-    'schema_async', 'generate_relations', 'template', 'register_template',
+    'schema_parallel_stream', 'schema_async', 'schema_async_stream',
+    'generate_relations', 'template', 'register_template',
     'load_templates', 'list_templates', 'pydantic', 'anonymize',
     'anonymize_dict', 'anonymize_list', 'export', 'export_stream',
     'to_csv', 'to_json', 'to_excel', 'to_sql', 'to_yaml', 'to_html',
@@ -267,6 +268,30 @@ class FakerX(Faker):
     ) -> List[Dict]:
         """异步生成"""
         return await BatchGenerator.generate_async(schema, total_count, batch_size)
+
+    def schema_parallel_stream(
+            self,
+            schema: Dict,
+            total_count: int,
+            workers: int = 4,
+            unique_fields: Optional[List[str]] = None,
+    ):
+        """多进程并行流式生成"""
+        yield from BatchGenerator.generate_parallel_stream(
+            schema, total_count, workers, unique_fields
+        )
+
+    async def schema_async_stream(
+            self,
+            schema: Dict,
+            total_count: int,
+            batch_size: int = 100,
+    ):
+        """异步流式生成"""
+        async for record in BatchGenerator.generate_async_stream(
+            schema, total_count, batch_size
+        ):
+            yield record
 
     # ================================================================
     # 模板系统
