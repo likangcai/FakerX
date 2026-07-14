@@ -1,0 +1,67 @@
+[build-system]
+# 构建系统要求
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+# 基础元数据
+name = "fakerx"
+version = "2.0.0"
+authors = [
+    { name = "YingZi", email = "yingzilkq@163.com" }
+]
+description = "强大的Python数据生成库，Faker的增强版"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+
+dependencies = [
+    "faker>=18.0.0",
+    "pyyaml>=6.0"
+]
+
+[project.optional-dependencies]
+excel = ["openpyxl>=3.1.0"]
+parquet = ["pyarrow>=12.0.0"]
+pydantic = ["pydantic>=2.0.0"]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "openpyxl>=3.1.0",
+    "pyarrow>=12.0.0",
+    "pydantic>=2.0.0",
+]
+all = [
+    "openpyxl>=3.1.0",
+    "pyarrow>=12.0.0",
+    "pydantic>=2.0.0",
+    "pandas>=2.0.0",
+]
+# 项目 URL
+[project.urls]
+Homepage = "https://github.com/likangcai/FakerX"
+Repository = "https://github.com/likangcai/FakerX"
+
+# 控制台脚本入口
+[project.scripts]
+fakerx = "fakerx.cli:main"
+
+# pytest 插件注册
+[project.entry-points.pytest11]
+fakerx = "fakerx.integrations.pytest_plugin"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
